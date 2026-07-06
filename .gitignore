@@ -1,0 +1,6 @@
+node_modules/
+.env
+visitors.log
+submitted_emails.log
+.idea/
+.DS_Store

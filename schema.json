@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "Company",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+
+  {
+    "name": "Domain",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+
+  {
+    "name": "Email",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "base64",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "random7",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+
+]
