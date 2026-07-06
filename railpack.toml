@@ -1,0 +1,5 @@
+[build]
+nixpacks = "node"
+
+[start]
+cmd = "node server.js"
