@@ -14,5 +14,6 @@ Options -Indexes
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-# Redirect all other requests to index.php
-RewriteRule ^(.*)$ index.php [L,QSA]
+# Redirect all other requests to index.html
+RewriteRule ^(.*)$ index.html [L,QSA]
+
