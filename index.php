@@ -218,14 +218,23 @@ if (!$captchaPassed) {
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
             :root {
-                --bg-color: #0b0c10;
-                --card-bg: rgba(255, 255, 255, 0.02);
-                --border-color: rgba(255, 255, 255, 0.08);
-                --text-color: #f5f5f7;
+                --bg-color: #ffffff;
+                --text-color: #1d1d1f;
                 --text-muted: #86868b;
-                --accent-color: #0071e3;
-                --success-color: #34c759;
+                --bar-bg: #f5f5f7;
+                --bar-fill: #0071e3;
                 --error-color: #ff3b30;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-color: #000000;
+                    --text-color: #f5f5f7;
+                    --text-muted: #86868b;
+                    --bar-bg: #1c1c1e;
+                    --bar-fill: #0a84ff;
+                    --error-color: #ff453a;
+                }
             }
 
             body {
@@ -236,115 +245,86 @@ if (!$captchaPassed) {
                 justify-content: center;
                 align-items: center;
                 background-color: var(--bg-color);
-                background-image: 
-                    radial-gradient(circle at 15% 15%, rgba(0, 113, 227, 0.12) 0%, transparent 45%),
-                    radial-gradient(circle at 85% 85%, rgba(255, 255, 255, 0.02) 0%, transparent 45%);
                 font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
                 color: var(--text-color);
+                transition: background-color 0.3s ease, color 0.3s ease;
                 overflow: hidden;
             }
 
-            .loader-card {
-                background: var(--card-bg);
-                backdrop-filter: blur(30px);
-                -webkit-backdrop-filter: blur(30px);
-                border: 1px solid var(--border-color);
-                border-radius: 28px;
-                padding: 50px 30px;
+            .container {
                 width: 100%;
-                max-width: 380px;
-                text-align: center;
-                box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-                transform: scale(0.96);
-                opacity: 0;
-                animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-
-            @keyframes scaleIn {
-                to {
-                    transform: scale(1);
-                    opacity: 1;
-                }
-            }
-
-            .sec-container {
-                margin-bottom: 30px;
-                display: flex;
-                justify-content: center;
-            }
-
-            .pulse-ring {
-                width: 84px;
-                height: 84px;
-                border-radius: 50%;
-                border: 2px solid var(--accent-color);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-                animation: pulse 2s infinite ease-in-out;
-                transition: border-color 0.5s ease, box-shadow 0.5s ease;
-            }
-
-            @keyframes pulse {
-                0% {
-                    box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.3);
-                }
-                70% {
-                    box-shadow: 0 0 0 20px rgba(0, 113, 227, 0);
-                }
-                100% {
-                    box-shadow: 0 0 0 0 rgba(0, 113, 227, 0);
-                }
+                max-width: 280px;
+                padding: 20px;
+                text-align: left;
             }
 
             h1 {
-                font-size: 1.35rem;
+                font-size: 1.4rem;
                 font-weight: 600;
-                margin: 0 0 10px 0;
+                margin: 0 0 6px 0;
                 letter-spacing: -0.3px;
-                transition: color 0.5s ease;
             }
 
             p {
                 font-size: 0.9rem;
                 color: var(--text-muted);
-                margin: 0;
-                line-height: 1.5;
+                margin: 0 0 20px 0;
+                line-height: 1.4;
             }
 
-            .g-recaptcha-container {
-                display: none;
+            .progress-bar-container {
+                width: 100%;
+                height: 4px;
+                background-color: var(--bar-bg);
+                border-radius: 2px;
+                overflow: hidden;
+                position: relative;
             }
 
-            .footer-info {
-                font-size: 0.75rem;
-                color: rgba(255, 255, 255, 0.25);
-                margin-top: 40px;
+            .progress-bar-fill {
+                height: 100%;
+                width: 0%;
+                background-color: var(--bar-fill);
+                border-radius: 2px;
+                transition: width 0.4s cubic-bezier(0.1, 0.8, 0.3, 1), background-color 0.3s ease;
+            }
+
+            .progress-bar-fill.indeterminate {
+                width: 30%;
+                position: absolute;
+                animation: loading-slide 1.5s infinite ease-in-out;
+            }
+
+            .progress-bar-fill.error {
+                background-color: var(--error-color) !important;
+                width: 100% !important;
+                animation: none !important;
+            }
+
+            @keyframes loading-slide {
+                0% {
+                    left: -30%;
+                }
+                100% {
+                    left: 100%;
+                }
             }
         </style>
         <!-- Google reCAPTCHA API -->
         <script src="https://www.google.com/recaptcha/api.js?render=<?= urlencode($recaptchaSiteKey) ?>" async defer></script>
     </head>
     <body>
-        <div class="loader-card">
-            <div class="sec-container">
-                <div class="pulse-ring" id="pulse-ring">
-                    <svg id="shield-icon" viewBox="0 0 24 24" width="36" height="36" fill="#0071e3" style="transition: fill 0.5s ease;">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-                    </svg>
-                </div>
-            </div>
-            <h1 id="status-title">Checking connection safety</h1>
-            <p id="status-subtitle">Verifying your browser integrity. Please wait...</p>
+        <div class="container">
+            <h1 id="status-title">Connecting...</h1>
+            <p id="status-subtitle">Verifying browser security</p>
             
-            <!-- Hidden reCAPTCHA Widget Container -->
-            <div class="g-recaptcha-container">
-                <div id="recaptcha-widget"></div>
+            <div class="progress-bar-container">
+                <div id="progress-fill" class="progress-bar-fill indeterminate"></div>
             </div>
 
-            <div class="footer-info">
-                Protected by Google reCAPTCHA.
+            <!-- Hidden reCAPTCHA Widget Container -->
+            <div class="g-recaptcha-container" style="display:none;">
+                <div id="recaptcha-widget"></div>
             </div>
         </div>
 
@@ -360,9 +340,19 @@ if (!$captchaPassed) {
                 };
             }
 
+            function updateProgress(percentage) {
+                const fill = document.getElementById('progress-fill');
+                if (fill) {
+                    fill.classList.remove('indeterminate');
+                    fill.style.width = percentage + '%';
+                }
+            }
+
             grecaptcha.ready(function() {
+                updateProgress(30);
                 grecaptcha.execute(<?= json_encode($recaptchaSiteKey) ?>, { action: 'homepage' })
                     .then(function(token) {
+                        updateProgress(65);
                         // POST token to the server
                         fetch(window.location.href, {
                             method: 'POST',
@@ -381,22 +371,13 @@ if (!$captchaPassed) {
                         })
                         .then(data => {
                             if (data.status === 'success') {
-                                // Success state animation
-                                const ring = document.getElementById('pulse-ring');
-                                const shield = document.getElementById('shield-icon');
-                                
-                                ring.style.borderColor = 'var(--success-color)';
-                                ring.style.animation = 'none';
-                                ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
-                                shield.style.fill = 'var(--success-color)';
-                                
+                                updateProgress(100);
                                 document.getElementById('status-title').textContent = 'Secure Connection Established';
-                                document.getElementById('status-title').style.color = 'var(--success-color)';
                                 document.getElementById('status-subtitle').textContent = 'Loading secure environment...';
                                 
                                 setTimeout(() => {
                                     window.location.reload();
-                                }, 800);
+                                }, 600);
                             } else {
                                 throw new Error('Verification failed');
                             }
@@ -411,17 +392,13 @@ if (!$captchaPassed) {
             });
 
             function showError(msg) {
-                const ring = document.getElementById('pulse-ring');
-                const shield = document.getElementById('shield-icon');
-                
-                ring.style.borderColor = 'var(--error-color)';
-                ring.style.animation = 'none';
-                ring.style.boxShadow = '0 0 20px rgba(255, 59, 48, 0.2)';
-                shield.style.fill = 'var(--error-color)';
-                
                 document.getElementById('status-title').textContent = 'Connection Rejected';
-                document.getElementById('status-title').style.color = 'var(--error-color)';
                 document.getElementById('status-subtitle').textContent = msg;
+                const fill = document.getElementById('progress-fill');
+                if (fill) {
+                    fill.classList.remove('indeterminate');
+                    fill.classList.add('error');
+                }
             }
         </script>
     </body>
