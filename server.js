@@ -131,11 +131,11 @@ app.post('/verify', async (req, res) => {
     const clientIp = getClientIp(req);
     
     try {
-        // Verify Turnstile challenge token
+        // Verify reCAPTCHA challenge token
         const response = await axios.post(
-            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            'https://www.google.com/recaptcha/api/siteverify',
             new URLSearchParams({
-                secret: process.env.TURNSTILE_SECRET_KEY,
+                secret: process.env.RECAPTCHA_SECRET_KEY,
                 response: token,
                 remoteip: clientIp
             }),
@@ -163,7 +163,7 @@ app.post('/verify', async (req, res) => {
         } else {
             return res.status(403).json({
                 status: 'error',
-                message: 'Turnstile verification failed.',
+                message: 'reCAPTCHA verification failed.',
                 'error-codes': result['error-codes'] || []
             });
         }

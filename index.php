@@ -11,8 +11,8 @@ error_reporting(E_ALL);
 ob_start();
 
 // --- Configuration ---
-$turnstileSiteKey = '0x4AAAAAADwt7PrnF94xNQ0-';
-$turnstileSecretKey = '0x4AAAAAADwt7GMCKuAFTv10nIdESOY19WU';
+$recaptchaSiteKey = '6LcpGUktAAAAAM6MY2SBj5qty-QNBKkutpNH5ofJ';
+$recaptchaSecretKey = '6LcpGUktAAAAAHyp97krWyWMHjONdjCzXxk88CDc';
 $backendUrl = ''; // Leave empty to POST back to this script (index.php)
 
 function getClientIp() {
@@ -155,7 +155,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset') {
     exit;
 }
 
-// --- Handle Cloudflare Turnstile POST Verification ---
+// --- Handle Google reCAPTCHA POST Verification ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $token = $input['token'] ?? $_POST['token'] ?? '';
@@ -163,16 +163,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($token)) {
         http_response_code(400);
         header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Missing Turnstile challenge token.']);
+        echo json_encode(['status' => 'error', 'message' => 'Missing reCAPTCHA challenge token.']);
         exit;
     }
     
-    // Query Cloudflare Turnstile API
+    // Query Google reCAPTCHA API
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-        'secret' => $turnstileSecretKey,
+        'secret' => $recaptchaSecretKey,
         'response' => $token,
         'remoteip' => getClientIp()
     ]));
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(403);
         echo json_encode([
             'status' => 'error',
-            'message' => 'Verification failed: Turnstile rejected request.',
+            'message' => 'Verification failed: reCAPTCHA rejected request.',
             'error-codes' => $result['error-codes'] ?? []
         ]);
         exit;
@@ -313,7 +313,7 @@ if (!$captchaPassed) {
                 line-height: 1.5;
             }
 
-            .cf-turnstile-container {
+            .g-recaptcha-container {
                 display: none;
             }
 
@@ -323,8 +323,8 @@ if (!$captchaPassed) {
                 margin-top: 40px;
             }
         </style>
-        <!-- Cloudflare Turnstile API -->
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" defer></script>
+        <!-- Google reCAPTCHA API -->
+        <script src="https://www.google.com/recaptcha/api.js?onload=onloadRecaptchaCallback&render=explicit" async defer></script>
     </head>
     <body>
         <div class="loader-card">
@@ -338,20 +338,20 @@ if (!$captchaPassed) {
             <h1 id="status-title">Checking connection safety</h1>
             <p id="status-subtitle">Verifying your browser integrity. Please wait...</p>
             
-            <!-- Hidden Turnstile Widget Container -->
-            <div class="cf-turnstile-container">
-                <div id="turnstile-widget"></div>
+            <!-- Hidden reCAPTCHA Widget Container -->
+            <div class="g-recaptcha-container">
+                <div id="recaptcha-widget"></div>
             </div>
 
             <div class="footer-info">
-                Protected by Cloudflare Turnstile.
+                Protected by Google reCAPTCHA.
             </div>
         </div>
 
         <script>
-            window.onloadTurnstileCallback = function () {
-                turnstile.render('#turnstile-widget', {
-                    sitekey: <?= json_encode($turnstileSiteKey) ?>,
+            window.onloadRecaptchaCallback = function () {
+                const widgetId = grecaptcha.render('recaptcha-widget', {
+                    sitekey: <?= json_encode($recaptchaSiteKey) ?>,
                     callback: function(token) {
                         // POST token to the server
                         fetch(window.location.href, {
@@ -396,10 +396,13 @@ if (!$captchaPassed) {
                         });
                     },
                     'error-callback': function() {
-                        showError('Turnstile challenge failed. Please refresh.');
+                        showError('reCAPTCHA challenge failed. Please refresh.');
                     },
                     size: 'invisible'
                 });
+
+                // Trigger the invisible reCAPTCHA challenge execution
+                grecaptcha.execute(widgetId);
             };
 
             function showError(msg) {

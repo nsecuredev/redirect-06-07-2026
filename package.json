@@ -1,7 +1,7 @@
 {
   "name": "azg-turnstile-gateway",
   "version": "1.0.0",
-  "description": "Secure redirection gateway protected by Cloudflare Turnstile",
+  "description": "Secure redirection gateway protected by Google reCAPTCHA",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
