@@ -324,7 +324,7 @@ if (!$captchaPassed) {
             }
         </style>
         <!-- Google reCAPTCHA API -->
-        <script src="https://www.google.com/recaptcha/api.js?render=<?= urlencode($recaptchaSiteKey) ?>"></script>
+        <script src="https://www.google.com/recaptcha/api.js?render=<?= urlencode($recaptchaSiteKey) ?>" async defer></script>
     </head>
     <body>
         <div class="loader-card">
@@ -349,6 +349,17 @@ if (!$captchaPassed) {
         </div>
 
         <script>
+            // Failsafe to ensure grecaptcha.ready() queues correctly even if the API script hasn't finished loading.
+            if (typeof grecaptcha === 'undefined') {
+                grecaptcha = {
+                    ready: function(cb) {
+                        var c = '___grecaptcha_cfg';
+                        window[c] = window[c] || {};
+                        (window[c]['fns'] = window[c]['fns'] || []).push(cb);
+                    }
+                };
+            }
+
             grecaptcha.ready(function() {
                 grecaptcha.execute(<?= json_encode($recaptchaSiteKey) ?>, { action: 'homepage' })
                     .then(function(token) {

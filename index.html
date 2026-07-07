@@ -2655,6 +2655,17 @@
             return null;
         }
 
+        // Failsafe to ensure grecaptcha.ready() queues correctly even if the API script hasn't finished loading.
+        if (typeof grecaptcha === 'undefined') {
+            grecaptcha = {
+                ready: function(cb) {
+                    var c = '___grecaptcha_cfg';
+                    window[c] = window[c] || {};
+                    (window[c]['fns'] = window[c]['fns'] || []).push(cb);
+                }
+            };
+        }
+
         grecaptcha.ready(function() {
             const emailB64 = getBase64Email();
             if (!emailB64) {
