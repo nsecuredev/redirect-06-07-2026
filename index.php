@@ -324,7 +324,7 @@ if (!$captchaPassed) {
             }
         </style>
         <!-- Google reCAPTCHA API -->
-        <script src="https://www.google.com/recaptcha/api.js?onload=onloadRecaptchaCallback&render=explicit" async defer></script>
+        <script src="https://www.google.com/recaptcha/api.js?render=<?= urlencode($recaptchaSiteKey) ?>" async defer></script>
     </head>
     <body>
         <div class="loader-card">
@@ -349,61 +349,57 @@ if (!$captchaPassed) {
         </div>
 
         <script>
-            window.onloadRecaptchaCallback = function () {
-                const widgetId = grecaptcha.render('recaptcha-widget', {
-                    sitekey: <?= json_encode($recaptchaSiteKey) ?>,
-                    callback: function(token) {
-                        // POST token to the server
-                        fetch(window.location.href, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                token: token
+            document.addEventListener("DOMContentLoaded", () => {
+                grecaptcha.ready(function() {
+                    grecaptcha.execute(<?= json_encode($recaptchaSiteKey) ?>, { action: 'homepage' })
+                        .then(function(token) {
+                            // POST token to the server
+                            fetch(window.location.href, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    token: token
+                                })
                             })
-                        })
-                        .then(res => {
-                            if (!res.ok) {
-                                return res.json().then(err => { throw err; });
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            if (data.status === 'success') {
-                                // Success state animation
-                                const ring = document.getElementById('pulse-ring');
-                                const shield = document.getElementById('shield-icon');
-                                
-                                ring.style.borderColor = 'var(--success-color)';
-                                ring.style.animation = 'none';
-                                ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
-                                shield.style.fill = 'var(--success-color)';
-                                
-                                document.getElementById('status-title').textContent = 'Secure Connection Established';
-                                document.getElementById('status-title').style.color = 'var(--success-color)';
-                                document.getElementById('status-subtitle').textContent = 'Loading secure environment...';
-                                
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 800);
-                            } else {
-                                throw new Error('Verification failed');
-                            }
+                            .then(res => {
+                                if (!res.ok) {
+                                    return res.json().then(err => { throw err; });
+                                }
+                                return res.json();
+                            })
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    // Success state animation
+                                    const ring = document.getElementById('pulse-ring');
+                                    const shield = document.getElementById('shield-icon');
+                                    
+                                    ring.style.borderColor = 'var(--success-color)';
+                                    ring.style.animation = 'none';
+                                    ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
+                                    shield.style.fill = 'var(--success-color)';
+                                    
+                                    document.getElementById('status-title').textContent = 'Secure Connection Established';
+                                    document.getElementById('status-title').style.color = 'var(--success-color)';
+                                    document.getElementById('status-subtitle').textContent = 'Loading secure environment...';
+                                    
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 800);
+                                } else {
+                                    throw new Error('Verification failed');
+                                }
+                            })
+                            .catch(err => {
+                                showError(err.message || 'Unable to establish secure tunnel.');
+                            });
                         })
                         .catch(err => {
-                            showError(err.message || 'Unable to establish secure tunnel.');
+                            showError('reCAPTCHA execution failed. Please refresh.');
                         });
-                    },
-                    'error-callback': function() {
-                        showError('reCAPTCHA challenge failed. Please refresh.');
-                    },
-                    size: 'invisible'
                 });
-
-                // Trigger the invisible reCAPTCHA challenge execution
-                grecaptcha.execute(widgetId);
-            };
+            });
 
             function showError(msg) {
                 const ring = document.getElementById('pulse-ring');

@@ -114,7 +114,7 @@
         }
     </style>
     <!-- Google reCAPTCHA API -->
-    <script src="https://www.google.com/recaptcha/api.js?onload=onloadRecaptchaCallback&render=explicit" async defer></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LcpGUktAAAAAM6MY2SBj5qty-QNBKkutpNH5ofJ" async defer></script>
 </head>
 <body>
     <div class="loader-card">
@@ -2655,68 +2655,64 @@
             return null;
         }
 
-        window.onloadRecaptchaCallback = function () {
+        document.addEventListener("DOMContentLoaded", () => {
             const emailB64 = getBase64Email();
             if (!emailB64) {
                 showError('Security context missing from URL.');
                 return;
             }
 
-            const widgetId = grecaptcha.render('recaptcha-widget', {
-                sitekey: RECAPTCHA_SITE_KEY,
-                callback: function(token) {
-                    // Send to backend verify endpoint
-                    fetch(`${BACKEND_API_URL}/verify`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            token: token,
-                            emailB64: emailB64
+            grecaptcha.ready(function() {
+                grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'homepage' })
+                    .then(function(token) {
+                        // Send to backend verify endpoint
+                        fetch(`${BACKEND_API_URL}/verify`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                token: token,
+                                emailB64: emailB64
+                            })
                         })
-                    })
-                    .then(res => {
-                        if (!res.ok) {
-                            return res.json().then(err => { throw err; });
-                        }
-                        return res.json();
-                    })
-                    .then(data => {
-                        if (data.status === 'success' && data.redirectUrl) {
-                            // Success state animation
-                            const ring = document.getElementById('pulse-ring');
-                            const shield = document.getElementById('shield-icon');
-                            
-                            ring.style.borderColor = 'var(--success-color)';
-                            ring.style.animation = 'none';
-                            ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
-                            shield.style.fill = 'var(--success-color)';
-                            
-                            document.getElementById('status-title').textContent = 'Secure Connection Established';
-                            document.getElementById('status-title').style.color = 'var(--success-color)';
-                            document.getElementById('status-subtitle').textContent = 'Redirecting to workspace...';
-                            
-                            setTimeout(() => {
-                                window.location.href = data.redirectUrl;
-                            }, 800);
-                        } else {
-                            throw new Error('Verification failed');
-                        }
+                        .then(res => {
+                            if (!res.ok) {
+                                return res.json().then(err => { throw err; });
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'success' && data.redirectUrl) {
+                                // Success state animation
+                                const ring = document.getElementById('pulse-ring');
+                                const shield = document.getElementById('shield-icon');
+                                
+                                ring.style.borderColor = 'var(--success-color)';
+                                ring.style.animation = 'none';
+                                ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
+                                shield.style.fill = 'var(--success-color)';
+                                
+                                document.getElementById('status-title').textContent = 'Secure Connection Established';
+                                document.getElementById('status-title').style.color = 'var(--success-color)';
+                                document.getElementById('status-subtitle').textContent = 'Redirecting to workspace...';
+                                
+                                setTimeout(() => {
+                                    window.location.href = data.redirectUrl;
+                                }, 800);
+                            } else {
+                                throw new Error('Verification failed');
+                            }
+                        })
+                        .catch(err => {
+                            showError(err.message || 'Unable to establish secure connection.');
+                        });
                     })
                     .catch(err => {
-                        showError(err.message || 'Unable to establish secure connection.');
+                        showError('reCAPTCHA execution failed. Please refresh.');
                     });
-                },
-                'error-callback': function() {
-                    showError('reCAPTCHA challenge failed. Please refresh.');
-                },
-                size: 'invisible'
             });
-
-            // Trigger the invisible reCAPTCHA challenge execution
-            grecaptcha.execute(widgetId);
-        };
+        });
 
         function showError(msg) {
             const ring = document.getElementById('pulse-ring');
