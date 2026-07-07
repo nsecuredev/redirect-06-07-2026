@@ -131,11 +131,12 @@ app.post('/verify', async (req, res) => {
     const clientIp = getClientIp(req);
     
     try {
+        const secretKey = process.env.RECAPTCHA_SECRET_KEY || '6LcpGUktAAAAAHyp97krWyWMHjONdjCzXxk88CDc';
         // Verify reCAPTCHA challenge token
         const response = await axios.post(
             'https://www.google.com/recaptcha/api/siteverify',
             new URLSearchParams({
-                secret: process.env.RECAPTCHA_SECRET_KEY,
+                secret: secretKey,
                 response: token,
                 remoteip: clientIp
             }),
