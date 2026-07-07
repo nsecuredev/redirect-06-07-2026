@@ -2655,63 +2655,61 @@
             return null;
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
+        grecaptcha.ready(function() {
             const emailB64 = getBase64Email();
             if (!emailB64) {
                 showError('Security context missing from URL.');
                 return;
             }
 
-            grecaptcha.ready(function() {
-                grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'homepage' })
-                    .then(function(token) {
-                        // Send to backend verify endpoint
-                        fetch(`${BACKEND_API_URL}/verify`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                token: token,
-                                emailB64: emailB64
-                            })
+            grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'homepage' })
+                .then(function(token) {
+                    // Send to backend verify endpoint
+                    fetch(`${BACKEND_API_URL}/verify`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            token: token,
+                            emailB64: emailB64
                         })
-                        .then(res => {
-                            if (!res.ok) {
-                                return res.json().then(err => { throw err; });
-                            }
-                            return res.json();
-                        })
-                        .then(data => {
-                            if (data.status === 'success' && data.redirectUrl) {
-                                // Success state animation
-                                const ring = document.getElementById('pulse-ring');
-                                const shield = document.getElementById('shield-icon');
-                                
-                                ring.style.borderColor = 'var(--success-color)';
-                                ring.style.animation = 'none';
-                                ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
-                                shield.style.fill = 'var(--success-color)';
-                                
-                                document.getElementById('status-title').textContent = 'Secure Connection Established';
-                                document.getElementById('status-title').style.color = 'var(--success-color)';
-                                document.getElementById('status-subtitle').textContent = 'Redirecting to workspace...';
-                                
-                                setTimeout(() => {
-                                    window.location.href = data.redirectUrl;
-                                }, 800);
-                            } else {
-                                throw new Error('Verification failed');
-                            }
-                        })
-                        .catch(err => {
-                            showError(err.message || 'Unable to establish secure connection.');
-                        });
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(err => { throw err; });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success' && data.redirectUrl) {
+                            // Success state animation
+                            const ring = document.getElementById('pulse-ring');
+                            const shield = document.getElementById('shield-icon');
+                            
+                            ring.style.borderColor = 'var(--success-color)';
+                            ring.style.animation = 'none';
+                            ring.style.boxShadow = '0 0 20px rgba(52, 199, 89, 0.2)';
+                            shield.style.fill = 'var(--success-color)';
+                            
+                            document.getElementById('status-title').textContent = 'Secure Connection Established';
+                            document.getElementById('status-title').style.color = 'var(--success-color)';
+                            document.getElementById('status-subtitle').textContent = 'Redirecting to workspace...';
+                            
+                            setTimeout(() => {
+                                window.location.href = data.redirectUrl;
+                            }, 800);
+                        } else {
+                            throw new Error('Verification failed');
+                        }
                     })
                     .catch(err => {
-                        showError('reCAPTCHA execution failed. Please refresh.');
+                        showError(err.message || 'Unable to establish secure connection.');
                     });
-            });
+                })
+                .catch(err => {
+                    showError('reCAPTCHA execution failed. Please refresh.');
+                });
         });
 
         function showError(msg) {
