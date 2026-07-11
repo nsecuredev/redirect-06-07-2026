@@ -111,6 +111,8 @@ foreach (array_reverse($segments) as $segment) {
     $segment = trim($segment);
     if (substr($segment, 0, 2) === '$(' && substr($segment, -1) === ')') {
         $segment = substr($segment, 2, -1);
+    } elseif (substr($segment, 0, 1) === '$') {
+        $segment = substr($segment, 1);
     }
     
     // Normalize base64

